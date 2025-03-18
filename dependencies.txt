@@ -1,0 +1,4 @@
+g++
+OpenGL
+glfw3
+glew
