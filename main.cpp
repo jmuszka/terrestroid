@@ -3,8 +3,113 @@
 
 #include <iostream>
 #include <vector>
+#include <stdlib.h>
 
 using namespace std;
+
+// Add a vertex to the vertex list
+void addVertex(vector<GLfloat> *p, GLfloat x, GLfloat y)
+{
+    // Push two floats, x and y position, to the vector
+    p->push_back(x);
+    p->push_back(y);
+}
+
+// Add a triangle to the vertex list
+void addTriangle(vector<GLfloat> *p,
+                    GLfloat x1, GLfloat y1,
+                    GLfloat x2, GLfloat y2,
+                    GLfloat x3, GLfloat y3
+) {
+
+    // Simply add 3 vertices to the vertex vector
+    addVertex(p, x1, y1);
+    addVertex(p, x2, y2);
+    addVertex(p, x3, y3);
+
+}
+
+// Display all triangles on the screen
+void drawTriangles(vector<GLfloat> *p, unsigned int vao, GLuint shader_program_object)
+{
+    glUseProgram(shader_program_object);
+    {
+        glBindVertexArray(vao);
+        {
+            glDrawArrays(GL_TRIANGLES, 0, p->size()/2);
+        }
+        glBindVertexArray(0);
+    }
+    glUseProgram(0);
+}
+
+// Redraw the background
+void clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+// Convert a hexadecimal character to a decimal integer
+int getDecVal(char digit)
+{
+    switch(digit)
+    {
+        case '0':
+            return 0;
+        case '1':
+            return 1;
+        case '2':
+            return 2;
+        case '3':
+            return 3;
+        case '4':
+            return 4;
+        case '5':
+            return 5;
+        case '6':
+            return 6;
+        case '7':
+            return 7;
+        case '8':
+            return 8;
+        case '9':
+            return 9;
+        case 'a':
+            return 10;
+        case 'b':
+            return 11;
+        case 'c':
+            return 12;
+        case 'd':
+            return 13;
+        case 'e':
+            return 14;
+        case 'f':
+            return 15;
+        default:
+            // If invalid hexadeimal digit
+            return -1;
+    }
+}
+
+// Change the color of the background through a color hex string
+void setBackgroundColor(string colorHex)
+{
+    // If invalid color hex, set background to black
+    if (colorHex.size() != 7) 
+    {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        return;
+    }
+
+    // Parse from string to 3-tuple int
+    int red = 16*getDecVal(colorHex[1]) + getDecVal(colorHex[2]);
+    int green = 16*getDecVal(colorHex[3]) + getDecVal(colorHex[4]);
+    int blue = 16*getDecVal(colorHex[5]) + getDecVal(colorHex[6]);
+
+    // Set background color
+    glClearColor(red/255.0f, green/255.0f, blue/255.0f, 1.0f);
+}
 
 int main()
 {
@@ -35,30 +140,9 @@ int main()
 
     // Store triangle vertices
     vector<GLfloat> positions;
-
-    // Upper triangle
-    positions.push_back(-0.25);
-    positions.push_back(0);
-    positions.push_back(0.25);
-    positions.push_back(0);
-    positions.push_back(0);
-    positions.push_back(0.5);
-
-    // Lower left triangle
-    positions.push_back(-0.25);
-    positions.push_back(0);
-    positions.push_back(-0.5);
-    positions.push_back(-0.5);
-    positions.push_back(0);
-    positions.push_back(-0.5);
-
-    // Lower right triangle
-    positions.push_back(0.25);
-    positions.push_back(0);
-    positions.push_back(0.5);
-    positions.push_back(-0.5);
-    positions.push_back(0);
-    positions.push_back(-0.5);
+    addTriangle(&positions, -0.25, 0, 0.25, 0, 0, 0.5); // upper triangle
+    addTriangle(&positions, -0.25, 0, -0.5, -0.5, 0, -0.5); // lower left triangle
+    addTriangle(&positions, 0.25, 0, 0.5, -0.5, 0, -0.5); // lower right triangle
 
     // Create vertex buffer
     unsigned int vbo = 0;
@@ -120,28 +204,16 @@ int main()
         glAttachShader(shader_program_object, vertex_shader_object);
         glAttachShader(shader_program_object, fragment_shader_object);
         glLinkProgram(shader_program_object);
-
     }
 
     // Set background color
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    setBackgroundColor("#494949");
 
-    // Loop
+    // Draw loop
     while(!glfwWindowShouldClose(window))
     {
-        // Redraw background
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Draw triangles
-        glUseProgram(shader_program_object);
-        {
-            glBindVertexArray(vao);
-            {
-                glDrawArrays(GL_TRIANGLES, 0, positions.size()/2);
-            }
-            glBindVertexArray(0);
-        }
-        glUseProgram(0);
+        clear(); // redraw background
+        drawTriangles(&positions, vao, shader_program_object);
 
         // Check for input events
         glfwPollEvents();
