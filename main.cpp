@@ -10,6 +10,7 @@
 
 #include "window.h"
 #include "color.h"
+#include "gl_vertex.h"
 
 // Number of dimensions
 #define N 3
@@ -35,39 +36,22 @@ unsigned int vao = 0;
 unsigned int vbo = 0;
 
 // Add a vertex to the vertex list
-void addVertex(GLfloat x, GLfloat y)
+void addVertex(GLVertex v)
 {
     // Push two floats, x and y position, to the vector
-    vertices.push_back(x);
-    vertices.push_back(y);
-    vertices.push_back(0.0);
+    vertices.push_back(v.getX());
+    vertices.push_back(v.getY());
+    vertices.push_back(v.getZ());
 }
 
 // Add a triangle to the vertex list
-void _addTriangle(
-                    GLfloat x1, GLfloat y1,
-                    GLfloat x2, GLfloat y2,
-                    GLfloat x3, GLfloat y3
-) {
+void addTriangle(GLVertex v1, GLVertex v2, GLVertex v3) {
 
     // Simply add 3 vertices to the vertex vector
-    addVertex(x1, y1);
-    addVertex(x2, y2);
-    addVertex(x3, y3);
+    addVertex(v1);
+    addVertex(v2);
+    addVertex(v3);
 
-}
-
-// Using conventional coordinates
-void addTriangle(
-    GLfloat x1, GLfloat y1,
-    GLfloat x2, GLfloat y2,
-    GLfloat x3, GLfloat y3)
-{
-    _addTriangle(
-        (x1-WIN_WIDTH/2)/(WIN_WIDTH/2), -(y1-WIN_HEIGHT/2)/(WIN_HEIGHT/2),
-        (x2-WIN_WIDTH/2)/(WIN_WIDTH/2), -(y2-WIN_HEIGHT/2)/(WIN_HEIGHT/2),
-        (x3-WIN_WIDTH/2)/(WIN_WIDTH/2), -(y3-WIN_HEIGHT/2)/(WIN_HEIGHT/2)
-    );
 }
 
 // Display all triangles on the screen
@@ -201,19 +185,22 @@ int main()
 
     // Store triangle vertices
     GLfloat length = WIN_WIDTH/8;
-    int X = 200; int Y = 200;
+    float X = 200; float Y = 200;
 
-    addTriangle(X, Y, 
-                X+length*sin(PI/6), Y+length*cos(PI/6), 
-                X-length*sin(PI/6), Y+length*cos(PI/6));
+    GLVertex v1(X/WIN_WIDTH*2-1, 1-Y/WIN_HEIGHT*2, 0.0f);
+    GLVertex v2((X+length*sin(PI/6))/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f);
+    GLVertex v3((X-length*sin(PI/6))/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f);
+    GLVertex v4((X-length*sin(PI/6))/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f);
+    GLVertex v5((X-length*sin(PI/6)-length*sin(PI/6))/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6)+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f);
+    GLVertex v6(X/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6)+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f);
 
-    addTriangle(X-length*sin(PI/6), Y+length*cos(PI/6),
-                X-length*sin(PI/6)-length*sin(PI/6), Y+length*cos(PI/6)+length*cos(PI/6),
-                X, Y+length*cos(PI/6)+length*cos(PI/6));
-
-    addTriangle(X+length*sin(PI/6), Y+length*cos(PI/6),
-                X+length*sin(PI/6)+length*sin(PI/6), Y+length*cos(PI/6)+length*cos(PI/6),
-                X, Y+length*cos(PI/6)+length*cos(PI/6));
+    addTriangle(v1, v2, v3);
+    addTriangle(v4, v5, v6);
+    addTriangle(
+        GLVertex((X+length*sin(PI/6))/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f),
+        GLVertex((X+length*sin(PI/6)+length*sin(PI/6))/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6)+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f),
+        GLVertex(X/WIN_WIDTH*2-1, 1-(Y+length*cos(PI/6)+length*cos(PI/6))/WIN_HEIGHT*2, 0.0f)
+    );
 
     glPipelineConfig();
 
