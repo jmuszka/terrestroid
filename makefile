@@ -1,5 +1,5 @@
 CC=g++
-libs= -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm
+libs= -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm
 deps= glad.c
 
 all: main.cpp
