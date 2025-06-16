@@ -7,6 +7,13 @@
 #define SCREEN_W 800
 #define SCREEN_H 600
 
+// Triangle
+float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
+    0.0f, 0.5f, 0.0f,
+};
+
 // Resize viewport upon resizing window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -15,14 +22,89 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void processInput(GLFWwindow *window)
 {
-    // Close window when pressing escape key
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    // Close window when pressing escape key or 'q'
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1);
+}
+
+void compileShaders()
+{
+    // Vertex shader
+    const char *vertexShaderSource = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{ gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); }\0";
+
+    // Create + compile shader
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // Check if compilation was successful
+    int success;
+    char infoLog[512]; // store error message
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compilation
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+
+    // Fragment shader
+    const char *fragmentShaderSource = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{ FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); }\0";
+    
+    // Create + compile shader
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    // Check if compilation was successful
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compilation
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Link shaders to shader program
+    unsigned int shaderProgram;
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    // Check if linked shader program failed
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Activate shader program object
+    glUseProgram(shaderProgram);
+
+    // Delete shader objects after linking
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 }
 
 // Rendering loop
 void render(GLFWwindow *window)
 {
+    // Vertex buffer object
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Copy user-defined data into currently-bound buffer
+
     while (!glfwWindowShouldClose(window))
     {
         // Input
@@ -68,6 +150,7 @@ int main() {
     // Set size of viewport to be window size
     glViewport(0, 0, SCREEN_W, SCREEN_H); // x, y, w, h
 
+    compileShaders();
     render(window);
     glfwTerminate();
     return 0;
