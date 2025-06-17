@@ -5,7 +5,7 @@
 #include <ostream>
 #include <stdlib.h>
 
-#define SCREEN_W 800
+#define SCREEN_W 600
 #define SCREEN_H 600
 
 // Window object
@@ -13,9 +13,20 @@ GLFWwindow* window;
 
 // Triangle
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    0.0f, 0.5f, 0.0f,
+    // Triangle 1
+    0.0f, 0.625f, 0.0f,
+    -0.35355f, 0.125f, 0.0f,
+    0.35355f, 0.125f, 0.0f,
+
+    // Triangle 2
+    0.35355f, 0.125f, 0.0f,
+    0.70712f, -0.375, 0.0f,
+    0.0f, -0.375, 0.0f,
+
+    // Triangle 3
+    -0.35355f, 0.125f, 0.0f,
+    -0.70712f, -0.375, 0.0f,
+    0.0f, -0.375, 0.0f,
 };
 
 // Vertex buffer object
@@ -147,7 +158,7 @@ void draw()
     
     // Draw triangle
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawArrays(GL_TRIANGLES, 0, 3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
+    glDrawArrays(GL_TRIANGLES, 0, 3*3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
 }
 
 // Rendering loop
