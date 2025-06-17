@@ -14,6 +14,15 @@ float vertices[] = {
     0.0f, 0.5f, 0.0f,
 };
 
+// Vertex buffer object
+unsigned int VBO;
+unsigned int VAO;
+
+// Link shaders to shader program
+unsigned int shaderProgram;
+unsigned int vertexShader;
+unsigned int fragmentShader;
+
 // Resize viewport upon resizing window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -36,7 +45,6 @@ void compileShaders()
         "{ gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); }\0";
 
     // Create + compile shader
-    unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
@@ -59,7 +67,6 @@ void compileShaders()
         "{ FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); }\0";
     
     // Create + compile shader
-    unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
@@ -72,8 +79,6 @@ void compileShaders()
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // Link shaders to shader program
-    unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
@@ -86,24 +91,47 @@ void compileShaders()
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
     }
+}
 
-    // Activate shader program object
+void draw()
+{
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Copy user-defined data into currently-bound buffer
+
+    // // Tell OpenGL how to parse vertex data
+    // /* params:
+    //  position of vertex attribute,
+    //  size of vertex attribute,
+    //  type of data,
+    //  whether or not to normalize the data,
+    //  stride (space between consecutive vertex attributes),
+    //  offset
+    // */
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+    // glEnableVertexAttribArray(0);
+
+    // // Activate shader program object
+    // glUseProgram(shaderProgram);
+
     glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
 
-    // Delete shader objects after linking
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDrawArrays(GL_TRIANGLES, 0, 3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
 }
 
 // Rendering loop
 void render(GLFWwindow *window)
 {
-    // Vertex buffer object
-    unsigned int VBO;
     glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenVertexArrays(1, &VAO);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Copy user-defined data into currently-bound buffer
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
+    glEnableVertexAttribArray(0);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -113,11 +141,17 @@ void render(GLFWwindow *window)
         // Rendering commands
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Set clear color with specified color (state-setting)
         glClear(GL_COLOR_BUFFER_BIT); // Clear the background (state-using)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        draw();
 
         // Check and call events and swap the buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    // Delete shader objects after linking
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 }
 
 int main() {
