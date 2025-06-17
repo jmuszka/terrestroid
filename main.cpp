@@ -8,6 +8,8 @@
 #define SCREEN_W 600
 #define SCREEN_H 600
 
+#define N 3
+
 // Window object
 GLFWwindow* window;
 
@@ -29,9 +31,9 @@ float vertices[] = {
     0.0f, -0.375, 0.0f,
 };
 
-// Vertex buffer object
-unsigned int VBO;
-unsigned int VAO;
+// Object IDs
+unsigned int VBO[N];
+unsigned int VAO[N];
 
 // Shader program and shaders
 unsigned int shaderProgram;
@@ -148,32 +150,41 @@ void compileShaders()
 // Drawing commands
 void draw()
 {
-    // Use the shader program and bind vertex array each time we draw
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-
     // Clear the background
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Set clear color with specified color (state-setting)
     glClear(GL_COLOR_BUFFER_BIT); // Clear the background (state-using)
-    
-    // Draw triangle
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawArrays(GL_TRIANGLES, 0, 3*3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
+
+    for (int i = 0; i < N; i++)
+    {
+        // Use the shader program and bind vertex array each time we draw
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO[i]);
+
+        // Draw triangle
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDrawArrays(GL_TRIANGLES, 3*i, 3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
+    }
 }
 
 // Rendering loop
 void render()
 {
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
 
-    glBindVertexArray(VAO);
+    for (int i = 0; i < N; i++)
+    {
+        // Set up buffers
+        glGenBuffers(1, &VBO[i]);
+        glGenVertexArrays(1, &VAO[i]);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glBindVertexArray(VAO[i]);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
-    glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // TODO: surely we don't need to pass in ALL the vertex data each time
+
+        // Tell OpenGL how to interpret vertex data 
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
+        glEnableVertexAttribArray(0); // 0 related to first 0 above
+    }
 
     // Rendering loop
     while (!glfwWindowShouldClose(window))
