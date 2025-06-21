@@ -16,20 +16,22 @@ GLFWwindow* window;
 
 // Triangle
 float vertices[] = {
-    // Triangle 1
-    0.0f, 0.625f, 0.0f,
-    -0.35355f, 0.125f, 0.0f,
-    0.35355f, 0.125f, 0.0f,
+    // position,        color
 
-    // Triangle 2
-    0.35355f, 0.125f, 0.0f,
-    0.70712f, -0.375, 0.0f,
-    0.0f, -0.375, 0.0f,
+    // Triangle 1, red
+    0.0f, 0.625f, 0.0f, 1.0f, 0.0f, 0.0f,
+    -0.35355f, 0.125f, 0.0f, 1.0f, 0.0f, 1.0f,
+    0.35355f, 0.125f, 0.0f, 1.0f, 1.0f, 0.0f,
 
-    // Triangle 3
-    -0.35355f, 0.125f, 0.0f,
-    -0.70712f, -0.375, 0.0f,
-    0.0f, -0.375, 0.0f,
+    // Triangle 2, green
+    0.35355f, 0.125f, 0.0f, 1.0f, 1.0f, 0.0f,
+    0.70712f, -0.375, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, -0.375, 0.0f, 0.0f, 1.0f, 1.0f,
+
+    // Triangle 3, blue
+    -0.35355f, 0.125f, 0.0f, 1.0f, 0.0f, 1.0f,
+    -0.70712f, -0.375, 0.0f, 0.0f, 0.0f, 1.0f,
+    0.0f, -0.375, 0.0f, 0.0f, 1.0f, 1.0f,
 };
 
 // Object IDs
@@ -37,12 +39,9 @@ unsigned int VBO[N];
 unsigned int VAO[N];
 
 // Shader program and shaders
-unsigned int shaderProgram[N];
+unsigned int shaderProgram;
 unsigned int vertexShader;
 unsigned int fragmentShader;
-
-int colorOffset = 0;
-int prevColorOffset = 1;
 
 // Resize viewport upon resizing window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -96,8 +95,10 @@ void compileShaders()
     // Vertex shader
     const char *vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec3 aColor;\n"
+        "out vec3 customColor;"
         "void main()\n"
-        "{ gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); }\0";
+        "{ gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); customColor = aColor; }\0";
 
     // Create + compile shader
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -122,9 +123,9 @@ void compileShaders()
     fragmentShaderSource =  
         "#version 330 core\n"
         "out vec4 FragColor;\n"
-        "uniform vec4 customColor;"
+        "in vec3 customColor;\n"
         "void main()\n"
-        "{ FragColor = customColor; }\0";
+        "{ FragColor = vec4(customColor, 1.0); }\0";
 
     // Create + compile shader
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -140,21 +141,17 @@ void compileShaders()
         exit(-1);
     }
 
-    for (int i = 0; i < N; i++)
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    // Check if linked shader program failed
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
     {
-
-        shaderProgram[i] = glCreateProgram();
-        glAttachShader(shaderProgram[i], vertexShader);
-        glAttachShader(shaderProgram[i], fragmentShader);
-        glLinkProgram(shaderProgram[i]);
-
-        // Check if linked shader program failed
-        glGetProgramiv(shaderProgram[i], GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(shaderProgram[i], 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
-        }
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
     }
 }
 
@@ -167,38 +164,13 @@ void draw()
 
     for (int i = 0; i < N; i++)
     {
-        float timeValue = glfwGetTime();
-        float dynamicColorValue = sin(timeValue)*sin(timeValue);
-        int vertexColorLocation = glGetUniformLocation(shaderProgram[i], "customColor");
-
         // Use the shader program and bind vertex array each time we draw
-        glUseProgram(shaderProgram[i]);
-        switch ((i+colorOffset)%N) {
-            case 0:
-                glUniform4f(vertexColorLocation, dynamicColorValue, 0.0f, 0.0f, 1.0f);
-                break;
-            case 1:
-                glUniform4f(vertexColorLocation, 0.0f, 0.0f, dynamicColorValue, 1.0f);
-                break;
-            case 2:
-                glUniform4f(vertexColorLocation, dynamicColorValue, dynamicColorValue, 0.0f, 1.0f);
-                break;
-            default:
-                glUniform4f(vertexColorLocation, 0.0f, 0.0f, 0.0f, 1.0f);
-
-        }
+        glUseProgram(shaderProgram);
         glBindVertexArray(VAO[i]);
 
         // Draw triangle
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 3*i, 3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
-
-        if (dynamicColorValue < 0.00001 && prevColorOffset != colorOffset) {
-            colorOffset++;
-            prevColorOffset = colorOffset;
-        }
-        if (dynamicColorValue > 0.9f) prevColorOffset = -1;
-
     }
 }
 
@@ -218,8 +190,10 @@ void render()
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // TODO: surely we don't need to pass in ALL the vertex data each time
 
         // Tell OpenGL how to interpret vertex data 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0);
         glEnableVertexAttribArray(0); // 0 related to first 0 above
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float)));
+        glEnableVertexAttribArray(1);
     }
 
     // Rendering loop
