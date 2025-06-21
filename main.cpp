@@ -104,9 +104,9 @@ void draw()
     for (int i = 0; i < N; i++)
     {
         // Use the shader program and bind vertex array each time we draw
-        // glUseProgram(shaderProgram);
-
         glBindVertexArray(VAO[i]);
+        shader->use();
+        shader->setFloat("x_offset", 1.0f-0.70712f);
 
         // Draw triangle
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -140,8 +140,6 @@ void render()
     while (!glfwWindowShouldClose(window))
     {
         processInput();   
-        shader->use();
-        shader->setFloat("someUniform", 1.0f);
         draw();
 
         // Check and call events and swap the buffers
