@@ -4,6 +4,7 @@
 #include <iostream>
 #include <ostream>
 #include <stdlib.h>
+#include <math.h>
 
 #define SCREEN_W 600
 #define SCREEN_H 600
@@ -38,8 +39,10 @@ unsigned int VAO[N];
 // Shader program and shaders
 unsigned int shaderProgram[N];
 unsigned int vertexShader;
-unsigned int fragmentShader[N];
+unsigned int fragmentShader;
 
+int colorOffset = 0;
+int prevColorOffset = 1;
 
 // Resize viewport upon resizing window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -114,51 +117,35 @@ void compileShaders()
 
 
     // Fragment shader
-    const char *fragmentShaderSource[N];
+    const char *fragmentShaderSource;
 
-    fragmentShaderSource[0] =  
+    fragmentShaderSource =  
         "#version 330 core\n"
         "out vec4 FragColor;\n"
+        "uniform vec4 customColor;"
         "void main()\n"
-        "{ FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); }\0";
+        "{ FragColor = customColor; }\0";
 
-    if (N > 1) 
-    {
-        fragmentShaderSource[1] =  
-            "#version 330 core\n"
-            "out vec4 FragColor;\n"
-            "void main()\n"
-            "{ FragColor = vec4(0.0f, 1.0f, 1.0f, 1.0f); }\0";
-    }
+    // Create + compile shader
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
 
-    if (N > 2)
+    // Check if compilation was successful
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compilation
+    if (!success)
     {
-        fragmentShaderSource[2] =  
-            "#version 330 core\n"
-            "out vec4 FragColor;\n"
-            "void main()\n"
-            "{ FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); }\0";
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        exit(-1);
     }
 
     for (int i = 0; i < N; i++)
     {
-        // Create + compile shader
-        fragmentShader[i] = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader[i], 1, &fragmentShaderSource[i], NULL);
-        glCompileShader(fragmentShader[i]);
-
-        // Check if compilation was successful
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compilation
-        if (!success)
-        {
-            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-            exit(-1);
-        }
 
         shaderProgram[i] = glCreateProgram();
         glAttachShader(shaderProgram[i], vertexShader);
-        glAttachShader(shaderProgram[i], fragmentShader[i]);
+        glAttachShader(shaderProgram[i], fragmentShader);
         glLinkProgram(shaderProgram[i]);
 
         // Check if linked shader program failed
@@ -175,18 +162,43 @@ void compileShaders()
 void draw()
 {
     // Clear the background
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Set clear color with specified color (state-setting)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set clear color with specified color (state-setting)
     glClear(GL_COLOR_BUFFER_BIT); // Clear the background (state-using)
 
     for (int i = 0; i < N; i++)
     {
+        float timeValue = glfwGetTime();
+        float dynamicColorValue = sin(timeValue)*sin(timeValue);
+        int vertexColorLocation = glGetUniformLocation(shaderProgram[i], "customColor");
+
         // Use the shader program and bind vertex array each time we draw
         glUseProgram(shaderProgram[i]);
+        switch ((i+colorOffset)%N) {
+            case 0:
+                glUniform4f(vertexColorLocation, dynamicColorValue, 0.0f, 0.0f, 1.0f);
+                break;
+            case 1:
+                glUniform4f(vertexColorLocation, 0.0f, 0.0f, dynamicColorValue, 1.0f);
+                break;
+            case 2:
+                glUniform4f(vertexColorLocation, dynamicColorValue, dynamicColorValue, 0.0f, 1.0f);
+                break;
+            default:
+                glUniform4f(vertexColorLocation, 0.0f, 0.0f, 0.0f, 1.0f);
+
+        }
         glBindVertexArray(VAO[i]);
 
         // Draw triangle
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 3*i, 3); // OpenGL primitive type, starting index of the vertex array, how many vertices to draw
+
+        if (dynamicColorValue < 0.00001 && prevColorOffset != colorOffset) {
+            colorOffset++;
+            prevColorOffset = colorOffset;
+        }
+        if (dynamicColorValue > 0.9f) prevColorOffset = -1;
+
     }
 }
 
@@ -223,8 +235,7 @@ void render()
 
     // Delete shader objects after linking
     glDeleteShader(vertexShader);
-    for (int i = 0; i < N; i++)
-        glDeleteShader(fragmentShader[i]);
+    glDeleteShader(fragmentShader);
 }
 
 int main() {
