@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "shader.hpp"
+#include "stb_image.h"
 
 #define SCREEN_W 600
 #define SCREEN_H 600
@@ -18,22 +19,22 @@ GLFWwindow* window;
 
 // Triangle
 float vertices[] = {
-    // position,        color
+    // position,        color,      texture coordinates
 
     // Triangle 1, red
-    0.0f, 0.625f, 0.0f, 1.0f, 0.0f, 0.0f,
-    -0.35355f, 0.125f, 0.0f, 1.0f, 0.0f, 1.0f,
-    0.35355f, 0.125f, 0.0f, 1.0f, 1.0f, 0.0f,
+    0.0f, 0.625f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 0.0f,
+    -0.35355f, 0.125f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+    0.35355f, 0.125f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
 
     // Triangle 2, green
-    0.35355f, 0.125f, 0.0f, 1.0f, 1.0f, 0.0f,
-    0.70712f, -0.375, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, -0.375, 0.0f, 0.0f, 1.0f, 1.0f,
+    0.35355f, 0.125f, 0.0f, 1.0f, 1.0f, 0.0f, 0.5f, 1.0f,
+    0.70712f, -0.375, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, -0.375, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
 
     // Triangle 3, blue
-    -0.35355f, 0.125f, 0.0f, 1.0f, 0.0f, 1.0f,
-    -0.70712f, -0.375, 0.0f, 0.0f, 0.0f, 1.0f,
-    0.0f, -0.375, 0.0f, 0.0f, 1.0f, 1.0f,
+    -0.35355f, 0.125f, 0.0f, 1.0f, 0.0f, 1.0f, 0.5f, 0.0f,
+    -0.70712f, -0.375, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.6f,
+    0.0f, -0.375, 0.0f, 0.0f, 1.0f, 1.0f, 0.8f, 0.6f,
 };
 
 // Object IDs
@@ -41,6 +42,13 @@ unsigned int VBO[N];
 unsigned int VAO[N];
 
 Shader *shader;
+
+// image
+int width, height, nrChannels;
+unsigned char *data = stbi_load("linus.jpeg", &width, &height, &nrChannels, 0);
+
+// texture
+unsigned int texture;
 
 // Resize viewport upon resizing window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -117,6 +125,11 @@ void draw()
 // Rendering loop
 void render()
 {
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data);
 
     for (int i = 0; i < N; i++)
     {
@@ -130,10 +143,12 @@ void render()
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // TODO: surely we don't need to pass in ALL the vertex data each time
 
         // Tell OpenGL how to interpret vertex data 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*) 0);
         glEnableVertexAttribArray(0); // 0 related to first 0 above
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*) (3*sizeof(float)));
         glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+        glEnableVertexAttribArray(2);
     }
 
     // Rendering loop
