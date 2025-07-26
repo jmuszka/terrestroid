@@ -10,6 +10,6 @@ out vec2 TexCoord;
 void main()
 { 
     gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); 
-    customColor = aPos; 
+    customColor = vec3(1.0, 1.0, 1.0); 
     TexCoord = aTexCoord;
 }
