@@ -21,15 +21,49 @@ GLFWwindow* window;
 
 // Triangle (xyz, st)
 float vertices[] = {
-    0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-    0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
-    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-    -0.5f, 0.5f, 0.0f, 0.0f, 0.0f,
+
+    // Front face
+    0.5f, 0.5f, 0.0f, 1.01f, -0.01f,
+    0.5f, -0.5f, 0.0f, 1.01f, 1.01f,
+    -0.5f, -0.5f, 0.0f, -0.01f, 1.01f,
+    -0.5f, 0.5f, 0.0f, -0.01f, -0.01f,
+
+    // Left face
+    -0.5f, 0.5f, 0.0f, 1.01f, -0.01f,
+    -0.5f, -0.5f, 0.0f, 1.01f, 1.01f,
+    -0.5f, 0.5f, 1.0f, -0.01f, -0.01f,
+    -0.5f, -0.5f, 1.0f, -0.01f, 1.01f,
+
+    // Right face
+    0.5f, 0.5f, 0.0f, -0.01f, 1.01f,
+    0.5f, -0.5f, 0.0f, -0.01f, -0.01f,
+    0.5f, 0.5f, 1.0f, 1.01f, 1.01f,
+    0.5f, -0.5f, 1.0f, 1.01f, -0.01f,
+
+    // Rear face
+    0.5f, 0.5f, 1.0f, -0.01f, -0.01f,
+    0.5f, -0.5f, 1.0f, -0.01f, 1.01f,
+    -0.5f, -0.5f, 1.0f, 1.01f, 1.01f,
+    -0.5f, 0.5f, 1.0f, 1.01f, -0.01f,
+    
 };
 
 unsigned int indices[] = {
+
+
+
     0, 1, 3,
     1, 2, 3,
+
+    8, 9, 10,
+    9, 10, 11,
+
+
+   12, 13, 14,
+    12, 14, 15,
+
+    4, 5, 6,
+    5, 6, 7,
 };
 
 // Object IDs
@@ -104,8 +138,20 @@ void draw()
     glClear(GL_COLOR_BUFFER_BIT); // Clear the background (state-using)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    // Transformation
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.5f));
+    model = glm::rotate(model, (float)glfwGetTime()/2, glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
+    model = glm::scale(model, glm::vec3(10.0, 10.0, 10.0));
+
     // Use the shader program and bind vertex array each time we draw
+    unsigned int transformLoc = glGetUniformLocation(shader->ID, "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model));
     shader->use();
+
     glBindTexture(GL_TEXTURE_2D, texture);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -136,6 +182,8 @@ void render()
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
