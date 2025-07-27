@@ -21,50 +21,50 @@ GLFWwindow* window;
 
 // Triangle (xyz, st)
 float vertices[] = {
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-    // Front face
-    0.5f, 0.5f, 0.0f, 1.01f, -0.01f,
-    0.5f, -0.5f, 0.0f, 1.01f, 1.01f,
-    -0.5f, -0.5f, 0.0f, -0.01f, 1.01f,
-    -0.5f, 0.5f, 0.0f, -0.01f, -0.01f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-    // Left face
-    -0.5f, 0.5f, 0.0f, 1.01f, -0.01f,
-    -0.5f, -0.5f, 0.0f, 1.01f, 1.01f,
-    -0.5f, 0.5f, 1.0f, -0.01f, -0.01f,
-    -0.5f, -0.5f, 1.0f, -0.01f, 1.01f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-    // Right face
-    0.5f, 0.5f, 0.0f, -0.01f, 1.01f,
-    0.5f, -0.5f, 0.0f, -0.01f, -0.01f,
-    0.5f, 0.5f, 1.0f, 1.01f, 1.01f,
-    0.5f, -0.5f, 1.0f, 1.01f, -0.01f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-    // Rear face
-    0.5f, 0.5f, 1.0f, -0.01f, -0.01f,
-    0.5f, -0.5f, 1.0f, -0.01f, 1.01f,
-    -0.5f, -0.5f, 1.0f, 1.01f, 1.01f,
-    -0.5f, 0.5f, 1.0f, 1.01f, -0.01f,
-    
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
-unsigned int indices[] = {
-
-
-
-    0, 1, 3,
-    1, 2, 3,
-
-    8, 9, 10,
-    9, 10, 11,
-
-
-   12, 13, 14,
-    12, 14, 15,
-
-    4, 5, 6,
-    5, 6, 7,
-};
+unsigned int indices[sizeof(vertices)/sizeof(float)];
 
 // Object IDs
 unsigned int VBO;
@@ -122,6 +122,7 @@ void init()
 
     // Set size of viewport to be window size
     glViewport(0, 0, SCREEN_W, SCREEN_H); // x, y, w, h
+    glEnable(GL_DEPTH_TEST);
 }
 
 // Compile GLSL code
@@ -135,21 +136,26 @@ void draw()
 {
     // Clear the background
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set clear color with specified color (state-setting)
-    glClear(GL_COLOR_BUFFER_BIT); // Clear the background (state-using)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the background and depth buffer
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // Transformation
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.5f));
-    model = glm::rotate(model, (float)glfwGetTime()/2, glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
-    model = glm::scale(model, glm::vec3(10.0, 10.0, 10.0));
+    model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_W/(float)SCREEN_H, 0.1f, 100.0f);
 
     // Use the shader program and bind vertex array each time we draw
-    unsigned int transformLoc = glGetUniformLocation(shader->ID, "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model));
+    unsigned int modelLoc = glGetUniformLocation(shader->ID, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    unsigned int projLoc = glGetUniformLocation(shader->ID, "projection");
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
     shader->use();
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -205,6 +211,9 @@ void render()
 
 int main() {
     init();
+
+    for (int i = 0; i < sizeof(vertices)/sizeof(float); i++)
+        indices[i] = i;
 
     shader = compileShaders();
     render();
