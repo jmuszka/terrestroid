@@ -61,10 +61,19 @@ float vertices[] = {
      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+
+
+    -100.0f, -0.5f, 100.0f, 0.0f, 0.0f,
+    -100.0f, -0.5f, -100.0f, 0.0f, 0.0f,
+    100.0f, -0.5f, -100.0f, 0.0f, 0.0f,
+    -100.0f, -0.5f, 100.0f, 0.0f, 0.0f,
+    100.0f, -0.5f, -100.0f, 0.0f, 0.0f,
+    100.0f, -0.5f, 100.0f, 0.0f, 0.0f,
+
 };
 
-unsigned int indices[sizeof(vertices)/sizeof(float)];
+unsigned int indices[sizeof(vertices)/sizeof(float) + 6];
 
 // Object IDs
 unsigned int VBO;
@@ -78,6 +87,50 @@ unsigned char *data = stbi_load("linus.jpeg", &width, &height, &nrChannels, 0);
 
 unsigned int texture;
 
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+float pitch = 0.0f;
+float yaw = 0.0f;
+float lastX = SCREEN_W/2;
+float lastY = SCREEN_H/2;
+bool firstMouse = true;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = ypos - lastY;
+    lastX = xpos;
+    lastY = ypos;
+
+    const float sensitivity = 0.05f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch -= yoffset;
+
+    if (pitch > 89.0f) pitch = 89.0f;
+    else if (pitch < -89.0f) pitch = -89.0f;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+}
+
 // Resize viewport upon resizing window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -87,6 +140,26 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // Handle keyboard input
 void processInput()
 {
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    
+    const float cameraSpeed = deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraUp;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraUp;
+
+    if (cameraPos.y < 0.0f) cameraPos.y = 0.0f;
+
     // Close window when pressing escape key or 'q'
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1);
@@ -112,6 +185,8 @@ void init()
     }
     glfwMakeContextCurrent(window); // Make the context of our window the main context on the current thread
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // Resize viewport upon resizing window
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
@@ -141,13 +216,11 @@ void draw()
 
     // Transformation
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-    glm::mat4 projection;
-    projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_W/(float)SCREEN_H, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_W/(float)SCREEN_H, 0.1f, 100.0f);
 
     // Use the shader program and bind vertex array each time we draw
     unsigned int modelLoc = glGetUniformLocation(shader->ID, "model");
