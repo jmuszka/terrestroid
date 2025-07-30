@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "shader.hpp"
+#include "camera.hpp"
 #include "stb_image.h"
 
 #include <glm/glm.hpp>
@@ -87,48 +88,14 @@ unsigned char *data = stbi_load("linus.jpeg", &width, &height, &nrChannels, 0);
 
 unsigned int texture;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera cam(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-float pitch = 0.0f;
-float yaw = 0.0f;
-float lastX = SCREEN_W/2;
-float lastY = SCREEN_H/2;
-bool firstMouse = true;
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = ypos - lastY;
-    lastX = xpos;
-    lastY = ypos;
-
-    const float sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch -= yoffset;
-
-    if (pitch > 89.0f) pitch = 89.0f;
-    else if (pitch < -89.0f) pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    cam.look(xpos, ypos);
 }
 
 // Resize viewport upon resizing window
@@ -144,21 +111,22 @@ void processInput()
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     
-    const float cameraSpeed = deltaTime;
+    const float speed = deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
+        cam.move(CAM_FORWARDS, speed);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
+        cam.move(CAM_BACKWARDS, speed);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+        cam.move(CAM_LEFT, speed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+        cam.move(CAM_RIGHT, speed);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraUp;
+        cam.move(CAM_UP, speed);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraUp;
+        cam.move(CAM_DOWN, speed);
 
-    if (cameraPos.y < 0.0f) cameraPos.y = 0.0f;
+    // Ground
+    if (cam.pos.y < 0.0f) cam.pos.y = 0.0f;
 
     // Close window when pressing escape key or 'q'
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -218,7 +186,7 @@ void draw()
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    glm::mat4 view = glm::lookAt(cam.pos, cam.pos+cam.front, cam.up);
 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_W/(float)SCREEN_H, 0.1f, 100.0f);
 
