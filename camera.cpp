@@ -44,29 +44,33 @@ Camera::Camera(float initialPosX, float initialPosY, float initialPosZ, float in
 
 void Camera::move(int direction, float distance)
 {
+    glm::vec3 mvmt = glm::vec3(0.0f, 0.0f ,0.0f);
+
     switch (direction) 
     {
         case CAM_LEFT:
-            pos += distance*glm::normalize(glm::cross(up, front));
+            mvmt = distance*glm::normalize(glm::cross(up, front));
             break;
         case CAM_RIGHT:
-            pos -= distance*glm::normalize(glm::cross(up, front));
+            mvmt = -distance*glm::normalize(glm::cross(up, front));
             break;
         case CAM_UP:
-            pos += distance*up;
+            mvmt = distance*up;
             break;
         case CAM_DOWN:
-            pos -= distance*up;
+            mvmt = -distance*up;
             break;
         case CAM_BACKWARDS:
-            pos -= distance*glm::normalize(glm::cross(glm::cross(up, front), up));
+            mvmt = -distance*glm::normalize(glm::cross(glm::cross(up, front), up));
             break;
         case CAM_FORWARDS:
-            pos += distance*glm::normalize(glm::cross(glm::cross(up, front), up));
+            mvmt = distance*glm::normalize(glm::cross(glm::cross(up, front), up));
             break;
         default:
             break;
     }
+
+    pos += mvmt;
 }
 
 void Camera::look(float xpos, float ypos)
