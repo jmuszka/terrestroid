@@ -8,6 +8,10 @@
 #include <sstream>
 #include <iostream>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 class Shader
 {
 public:
@@ -20,6 +24,7 @@ public:
     void setBool(const std::string &name, bool value);
     void setInt(const std::string &name, int value);
     void setFloat(const std::string &name, float value);
+    void setVec3(const std::string &name, glm::vec3 value);
 };
 
 #endif
