@@ -213,6 +213,11 @@ Shader* compileShaders(const std::string &vertexShader, const std::string &fragm
     return new Shader(vertexShader.c_str(), fragmentShader.c_str());
 }
 
+Shader* compileShaders(const std::string &vertexShader, const std::string &geometryShader, const std::string &fragmentShader)
+{
+    return new Shader(vertexShader.c_str(), geometryShader.c_str(), fragmentShader.c_str());
+}
+
 // Drawing commands
 void draw()
 {
@@ -332,7 +337,7 @@ int main() {
     for (int i = 0; i < sizeof(lightIndices)/sizeof(float); i++)
         lightIndices[i] = i;
 
-    shader = compileShaders("shaders/vertex_shader.glsl", "shaders/frag_shader.glsl");
+    shader = compileShaders("shaders/vertex_shader.glsl", "shaders/geometry_shader.glsl", "shaders/frag_shader.glsl");
     lightSourceShader = compileShaders("shaders/vertex_shader.glsl", "shaders/light_source_frag.glsl");
     render();
 
