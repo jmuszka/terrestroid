@@ -18,6 +18,7 @@ public:
     unsigned int ID; // program ID
 
     Shader(const char* vertexPath, const char* fragmentPath);
+    Shader(const char* vertexPath, const char* geometryPath, const char* fragmentPath);
     void use(); // use/activate the shader
 
     // utility uniform functions:
