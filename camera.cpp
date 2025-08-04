@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include <iostream>
 
 glm::vec3 Camera::up = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -67,6 +68,8 @@ void Camera::move(int direction, float distance)
         default:
             break;
     }
+
+    std::cout << "(" << pos.x << ", " << pos.y << ", " << pos.z << ")" << std::endl;
 }
 
 void Camera::look(float xpos, float ypos)
