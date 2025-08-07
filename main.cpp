@@ -24,47 +24,29 @@ GLFWwindow* window;
 // Triangle (xyz, st)
 float vertices[] = {
     // CUBE
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    // Bottom left fwd
+    -0.5f, -0.5f, -0.5f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    // Bottom right fwd
+     0.5f, -0.5f, -0.5f,
 
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     // Top right fwd
+     0.5f,  0.5f, -0.5f,
 
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     // Top left fwd
+    -0.5f,  0.5f, -0.5f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    // Bottom left back
+    -0.5f, -0.5f,  0.5f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    // Bottom right back
+     0.5f, -0.5f,  0.5f,
+
+     // Top right back
+     0.5f,  0.5f,  0.5f,
+
+    // Top left back
+    -0.5f,  0.5f,  0.5f,
 
 
     // LIGHT SOURCE
@@ -111,7 +93,34 @@ float vertices[] = {
     0.9f, -0.1f, 1.1f,  0.0f, 1.0f,
 };
 
-unsigned int indices[36];
+// Order of vertices matters in order to get normal vector direction right
+// (Normal should be direction of thumb sticking out of page)
+unsigned int indices[] = {
+    // Front (normalized)
+    0, 1, 2,
+    0, 2, 3,
+
+    // Back (normalized)
+    4, 6, 5,
+    4, 7, 6,
+
+    // Left (normalized)
+    7, 0, 3,
+    7, 4, 0,
+
+    // Right (normalized)
+    2, 5, 6,
+    2, 1, 5,
+
+    // Top (normalized)
+    2, 6, 3,
+    3, 6, 7,
+
+    // Bottom (normalized)
+    0, 4, 1,
+    1, 4, 5,
+};
+
 unsigned int lightIndices[36];
 
 // Object IDs
@@ -131,6 +140,7 @@ Shader *lightSourceShader;
 // unsigned int texture;
 
 Camera cam(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+glm::vec3 lightPos(1.0, 0.0, 1.0);
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -227,8 +237,9 @@ void draw()
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     shader->use();
-    shader->setVec3("objectColor", glm::vec3(0.8f, 0.1f, 0.8f));
+    shader->setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f));
     shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    shader->setVec3("lightPos", lightPos);
 
     // Transformation
     glm::mat4 model = glm::mat4(1.0f);
@@ -281,7 +292,7 @@ void render()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
     // Texture attributes
     // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
@@ -293,7 +304,7 @@ void render()
     glGenBuffers(1, &lightEBO);
     glBindVertexArray(lightVAO);
     glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices+36*5, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices+8*3, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(lightIndices), lightIndices, GL_STATIC_DRAW);
 
@@ -332,8 +343,6 @@ void render()
 int main() {
     init();
 
-    for (int i = 0; i < sizeof(indices)/sizeof(float); i++)
-        indices[i] = i;
     for (int i = 0; i < sizeof(lightIndices)/sizeof(float); i++)
         lightIndices[i] = i;
 
