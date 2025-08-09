@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string>
+#include <vector>
 
 #include "shader.hpp"
 #include "camera.hpp"
@@ -20,82 +21,39 @@
 
 // Window object
 GLFWwindow* window;
+glm::vec3 lightPos(1.7, 1.6, 0.9);
 
 // Triangle (xyz, st)
-float vertices[] = {
+std::vector<GLfloat> vertices = {
     // CUBE
     // Bottom left fwd
     -0.5f, -0.5f, -0.5f,
-
     // Bottom right fwd
      0.5f, -0.5f, -0.5f,
-
      // Top right fwd
      0.5f,  0.5f, -0.5f,
-
      // Top left fwd
     -0.5f,  0.5f, -0.5f,
-
     // Bottom left back
     -0.5f, -0.5f,  0.5f,
-
     // Bottom right back
      0.5f, -0.5f,  0.5f,
-
      // Top right back
      0.5f,  0.5f,  0.5f,
-
     // Top left back
     -0.5f,  0.5f,  0.5f,
 
-
     // LIGHT SOURCE
-    0.9f, -0.1f, 1.1f,  0.0f, 0.0f,
-    1.1f, -0.1f, 1.1f,  1.0f, 0.0f,
-    1.1f,  0.1f, 1.1f,  1.0f, 1.0f,
-    0.9f, -0.1f, 1.1f,  0.0f, 0.0f,
-    1.1f,  0.1f, 1.1f,  1.0f, 1.0f,
-    0.9f,  0.1f, 1.1f,  0.0f, 1.0f,
+    lightPos.x, lightPos.y, lightPos.z,
+};
 
-    1.1f, -0.1f, 0.9f,  0.0f, 0.0f,
-    0.9f, -0.1f, 0.9f,  1.0f, 0.0f,
-    0.9f,  0.1f, 0.9f,  1.0f, 1.0f,
-    1.1f, -0.1f, 0.9f,  0.0f, 0.0f,
-    0.9f,  0.1f, 0.9f,  1.0f, 1.0f,
-    1.1f,  0.1f, 0.9f,  0.0f, 1.0f,
-
-    0.9f, -0.1f, 0.9f,  0.0f, 0.0f,
-    0.9f, -0.1f, 1.1f,  1.0f, 0.0f,
-    0.9f,  0.1f, 1.1f,  1.0f, 1.0f,
-    0.9f, -0.1f, 0.9f,  0.0f, 0.0f,
-    0.9f,  0.1f, 1.1f,  1.0f, 1.0f,
-    0.9f,  0.1f, 0.9f,  0.0f, 1.0f,
-
-    1.1f, -0.1f, 1.1f,  0.0f, 0.0f,
-    1.1f, -0.1f, 0.9f,  1.0f, 0.0f,
-    1.1f,  0.1f, 0.9f,  1.0f, 1.0f,
-    1.1f, -0.1f, 1.1f,  0.0f, 0.0f,
-    1.1f,  0.1f, 0.9f,  1.0f, 1.0f,
-    1.1f,  0.1f, 1.1f,  0.0f, 1.0f,
-
-    0.9f,  0.1f, 1.1f,  0.0f, 0.0f,
-    1.1f,  0.1f, 1.1f,  1.0f, 0.0f,
-    1.1f,  0.1f, 0.9f,  1.0f, 1.0f,
-    0.9f,  0.1f, 1.1f,  0.0f, 0.0f,
-    1.1f,  0.1f, 0.9f,  1.0f, 1.0f,
-    0.9f,  0.1f, 0.9f,  0.0f, 1.0f,
-
-    0.9f, -0.1f, 0.9f,  0.0f, 0.0f,
-    1.1f, -0.1f, 0.9f,  1.0f, 0.0f,
-    1.1f, -0.1f, 1.1f,  1.0f, 1.0f,
-    0.9f, -0.1f, 0.9f,  0.0f, 0.0f,
-    1.1f, -0.1f, 1.1f,  1.0f, 1.0f,
-    0.9f, -0.1f, 1.1f,  0.0f, 1.0f,
+std::vector<unsigned int> lightIndices = {
+    8
 };
 
 // Order of vertices matters in order to get normal vector direction right
 // (Normal should be direction of thumb sticking out of page)
-unsigned int indices[] = {
+std::vector<unsigned int> indices = {
     // Front (normalized)
     0, 1, 2,
     0, 2, 3,
@@ -121,8 +79,6 @@ unsigned int indices[] = {
     1, 4, 5,
 };
 
-unsigned int lightIndices[36];
-
 // Object IDs
 unsigned int VBO;
 unsigned int VAO;
@@ -140,7 +96,6 @@ Shader *lightSourceShader;
 // unsigned int texture;
 
 Camera cam(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-glm::vec3 lightPos(1.0, 0.0, 1.0);
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -261,7 +216,7 @@ void draw()
     // glBindTexture(GL_TEXTURE_2D, texture);
 
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
 
     // Draw light source
@@ -275,7 +230,8 @@ void draw()
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
     glBindVertexArray(lightVAO);
-    glDrawElements(GL_TRIANGLES, sizeof(lightIndices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+    glPointSize(10.0f);
+    glDrawElements(GL_POINTS, lightIndices.size(), GL_UNSIGNED_INT, 0);
 }
 
 // Rendering loop
@@ -287,12 +243,12 @@ void render()
     glGenBuffers(1, &EBO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
     // Position attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*) 0);
     glEnableVertexAttribArray(0);
     // Texture attributes
     // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
@@ -304,12 +260,12 @@ void render()
     glGenBuffers(1, &lightEBO);
     glBindVertexArray(lightVAO);
     glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices+8*3, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(lightIndices), lightIndices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, lightIndices.size()*sizeof(unsigned int), lightIndices.data(), GL_STATIC_DRAW);
 
     // Position attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*) 0);
     glEnableVertexAttribArray(0);
     // Texture attributes
     // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
@@ -342,9 +298,6 @@ void render()
 
 int main() {
     init();
-
-    for (int i = 0; i < sizeof(lightIndices)/sizeof(float); i++)
-        lightIndices[i] = i;
 
     shader = compileShaders("shaders/vertex_shader.glsl", "shaders/geometry_shader.glsl", "shaders/frag_shader.glsl");
     lightSourceShader = compileShaders("shaders/vertex_shader.glsl", "shaders/light_source_frag.glsl");

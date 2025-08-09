@@ -20,7 +20,7 @@ void main()
     vec3 diffuse = diff * lightColor;
 
     // Inverse square law
-    float intensity = 1.0/(length(lightPos - FragPos)*length(lightPos - FragPos));
+    float intensity = 3.0/(length(lightPos - FragPos)*length(lightPos - FragPos));
 
     vec3 result = intensity * (ambient + diffuse) * objectColor; 
     FragColor = vec4(result, 1.0);
